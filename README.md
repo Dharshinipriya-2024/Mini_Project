@@ -33,7 +33,7 @@ npm install
 npm run dev
 ```
 
-The app will be available at **http://localhost:5000**
+The app will be available at *student-task-2026.netlify.app*
 
 To create a production build:
 
