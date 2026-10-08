@@ -1,150 +1,392 @@
 # Student Task Manager
 
-A simple web application built for a DevOps mini project demonstrating **Web Application → Docker → Kubernetes**.
+A simple web application built for a DevOps mini project demonstrating:
 
-## What the Application Does
+**Web Application → Docker → Kubernetes → Public Web Application**
 
-Student Task Manager is a simple task management app that lets you:
+## Live Application
 
-- View task statistics (total, completed, pending)
+The Student Task Manager is available online at:
+
+**https://student-task-2026.netlify.app/**
+
+The application allows users to manage student tasks through a simple web interface.
+
+> **Note:** The Netlify URL is the current public web URL for the application. The Kubernetes deployment is used to demonstrate containerization and orchestration as part of the DevOps project.
+
+---
+
+##  What the Application Does
+
+Student Task Manager is a simple task management application that lets you:
+
+- View task statistics
+  - Total tasks
+  - Completed tasks
+  - Pending tasks
 - Add new tasks with a title and description
 - Mark tasks as completed or pending
 - Delete tasks
 - Search tasks by title
+- Start with 5 sample tasks related to a DevOps assignment
 
-The app comes pre-loaded with 5 sample tasks related to a DevOps assignment.
+---
 
-## Tech Stack
+##  Tech Stack
 
 - **Frontend:** React + TypeScript
 - **Build Tool:** Vite
 - **Styling:** Tailwind CSS
 - **Icons:** Lucide React
+- **Containerization:** Docker
+- **Web Server:** Nginx
+- **Container Orchestration:** Kubernetes
+- **Local Kubernetes Cluster:** Minikube
+- **Public Web Hosting:** Netlify
 
-## How to Install Dependencies
+---
 
-```bash
+##  How to Install Dependencies
+
+Clone or download the project and navigate to the project directory:
+
+bash
 npm install
-```
 
-## How to Run It Locally
 
-```bash
+---
+
+##  How to Run the Application Locally
+
+Start the Vite development server:
+
+bash
 npm run dev
-```
 
-The app will be available at *student-task-2026.netlify.app*
+
+Vite will display the local URL in the terminal.
 
 To create a production build:
 
-```bash
+bash
 npm run build
+
+To preview the production build:
+
+bash
 npm run preview
-```
 
-## How to Build the Docker Image
 
-```bash
+---
+
+##  Docker
+
+### Build the Docker Image
+
+Build the production Docker image:
+
+bash
 docker build -t student-task-manager:1.0 .
-```
 
-## How to Run the Docker Container
 
-```bash
-docker run -p 5000:5000 student-task-manager:1.0
-```
+### Run the Docker Container
 
-The app will be available at **http://localhost:5000**
+Run the container:
 
-## Kubernetes Deployment
+bash
+docker run -d -p 8080:80 --name student-task-manager student-task-manager:1.0
 
-The application can be deployed to a Kubernetes cluster (e.g., Minikube).
 
-### Configuration
+The application can then be accessed at:
 
-The Kubernetes manifests are in the `kubernetes/` directory:
+
+http://localhost:8080
+
+
+### Stop the Container
+
+bash
+docker stop student-task-manager
+
+
+### Remove the Container
+
+bash
+docker rm student-task-manager
+
+
+---
+
+#  Kubernetes Deployment
+
+The application can be deployed to a Kubernetes cluster using Minikube.
+
+The Kubernetes manifests are located in the `kubernetes/` directory.
 
 | File | Purpose |
-|------|---------|
+|---|---|
 | `deployment.yaml` | Deploys 2 replicas of the application |
-| `service.yaml` | Exposes the app on NodePort 30001 |
+| `service.yaml` | Exposes the application using a NodePort service |
 
-### Deployment Details
+## Kubernetes Deployment Details
 
-- **Replicas:** 2 (for high availability)
-- **Container Port:** 5000
-- **Service Type:** NodePort (accessible on port 30001)
-- **Liveness Probe:** Checks `http://localhost:5000/` every 30 seconds
-- **Readiness Probe:** Checks `http://localhost:5000/` every 10 seconds
-- **Resource Limits:** 250m CPU / 256Mi memory per pod
+- **Replicas:** 2
+- **Container Port:** 80
+- **Service Type:** NodePort
+- **NodePort:** 30080
+- **Target Port:** 80
+- **Web Server:** Nginx
+- **Readiness Probe:** HTTP check on `/`
+- **Liveness Probe:** HTTP check on `/`
 
-### Deploy Steps (Minikube)
+Two replicas are used to demonstrate Kubernetes workload replication and availability.
 
-1. Start Minikube:
+---
 
-```bash
-minikube start
-```
+##  Deploy Using Minikube
 
-2. Point your local Docker to Minikube's daemon:
+### 1. Start Minikube
 
-```bash
-eval $(minikube docker-env)
-```
+bash
+minikube start --driver=docker
 
-3. Build the image inside Minikube:
 
-```bash
-docker build -t student-task-manager:1.0 .
-```
+### 2. Verify the Kubernetes Node
 
-4. Apply the Kubernetes manifests:
+bash
+kubectl get nodes
 
-```bash
-kubectl apply -f kubernetes/
-```
 
-5. Check the deployment:
+The Minikube node should show:
 
-```bash
+
+STATUS
+Ready
+
+
+### 3. Load the Docker Image into Minikube
+
+If the image has already been built locally:
+
+bash
+minikube image load student-task-manager:1.0
+
+
+Verify that the image is available:
+
+bash
+minikube image ls
+
+
+---
+
+### 4. Apply the Kubernetes Deployment
+
+bash
+kubectl apply -f kubernetes/deployment.yaml
+
+
+### 5. Apply the Kubernetes Service
+
+bash
+kubectl apply -f kubernetes/service.yaml
+
+
+---
+
+##  Verify the Kubernetes Deployment
+
+Check the deployment:
+
+bash
+kubectl get deployment
+
+Expected result:
+
+
+NAME                   READY
+student-task-manager   2/2
+
+
+Check the pods:
+
+bash
 kubectl get pods
+
+
+The two application pods should have:
+
+
+READY   STATUS
+1/1     Running
+1/1     Running
+
+
+Check the service:
+
+bash
 kubectl get services
-```
 
-6. Access the app:
 
-```bash
-minikube service student-task-manager
-```
+The service should show:
 
-Or open **http://<minikube-ip>:30001** in your browser.
 
-### Clean Up
+80:30080/TCP
 
-```bash
-kubectl delete -f kubernetes/
-minikube stop
-```
 
-## Project Structure
+---
 
-```
+## Access the Kubernetes Application
+
+Because Minikube is running locally, use the following command to obtain the accessible Minikube URL:
+
+bash
+minikube service student-task-manager-service --url
+
+
+This may return a local URL such as:
+
+
+http://127.0.0.1:53100
+
+
+Open the returned URL in your browser.
+
+### Temporary Public Access
+
+For demonstration purposes, the local Kubernetes service can be exposed through a tunneling service.
+
+For example, using Cloudflare Tunnel:
+
+bash
+cloudflared tunnel --url http://127.0.0.1:53100
+
+
+This generates a temporary public HTTPS URL that can be shared for demonstration purposes.
+
+> The temporary tunnel works only while Minikube and the tunnel are running.
+
+---
+
+##  Application Architecture
+
+
+                 User
+                  │
+                  ▼
+        Student Task Manager
+                  │
+                  ▼
+             Docker Image
+                  │
+                  ▼
+          Kubernetes Deployment
+                  │
+          ┌───────┴───────┐
+          ▼               ▼
+       Pod 1             Pod 2
+          │               │
+          └───────┬───────┘
+                  ▼
+       Kubernetes NodePort
+          Port 30080
+                  │
+                  ▼
+             Web Browser
+
+
+##  Project Structure
+
+
 student-task-manager/
 ├── src/
-│   ├── App.tsx          # Main application component
-│   ├── main.tsx         # React entry point
-│   ├── index.css        # Global styles
-│   ├── types.ts         # Task type definition
-│   └── storage.ts       # Local storage + sample data
+│   ├── App.tsx
+│   ├── main.tsx
+│   ├── index.css
+│   ├── types.ts
+│   └── storage.ts
+│
 ├── kubernetes/
-│   ├── deployment.yaml  # Kubernetes Deployment (2 replicas)
-│   └── service.yaml     # Kubernetes Service (NodePort)
-├── Dockerfile           # Multi-stage Docker build
-├── .dockerignore        # Docker ignore file
-├── package.json         # Dependencies and scripts
-└── vite.config.ts       # Vite configuration (port 5000)
+│   ├── deployment.yaml
+│   └── service.yaml
+│
+├── Dockerfile
+├── .dockerignore
+├── package.json
+└── vite.config.ts
 ```
 
-## Health Check
+---
 
-The app serves a static page at `/` which returns HTTP 200, making it suitable for Kubernetes liveness and readiness probes. The `serve` package used in the Docker container responds to all requests on port 5000.
+##  Health Checks
+
+The application serves the main page at `/` and returns HTTP 200.
+
+Kubernetes uses HTTP health checks to monitor the application.
+
+### Readiness Probe
+
+The readiness probe determines whether a pod is ready to receive traffic.
+
+### Liveness Probe
+
+The liveness probe determines whether the application is still running correctly.
+
+These probes help Kubernetes manage unhealthy containers automatically.
+
+---
+
+##  Clean Up
+
+Remove the Kubernetes resources:
+
+bash
+kubectl delete -f kubernetes/
+
+
+Stop Minikube:
+
+bash
+minikube stop
+
+
+##  Project Objective
+
+The objective of this project is to demonstrate a basic DevOps workflow:
+
+text
+Develop Web Application
+          ↓
+      Build with Vite
+          ↓
+   Create Docker Image
+          ↓
+   Run Docker Container
+          ↓
+ Deploy Using Kubernetes
+          ↓
+     Create 2 Replicas
+          ↓
+ Expose Using Kubernetes Service
+          ↓
+      Access Application
+
+
+The project demonstrates fundamental concepts of:
+
+- Web application development
+- Docker containerization
+- Kubernetes deployments
+- Kubernetes pods
+- Kubernetes services
+- Application replication
+- Health checks
+- DevOps deployment workflow
+
+
+
+##  Live Application
+
+**Student Task Manager:**  
+https://student-task-2026.netlify.app/
+
